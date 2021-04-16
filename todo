@@ -1,0 +1,8 @@
+[ general ]
+[ content ]
+	- settings
+	- simple y/n prompt
+[ bugs ]
+	- multiline question
+[ misc ]
+	- examples
