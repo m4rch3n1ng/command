@@ -1,9 +1,7 @@
-( v 16-04-2021 )
+( v 17-04-2021 )
 [ general ]
-	- initial commit
 [ content ]
-	- input
-	- select
-	- multiple
+	- y/n option
+	- control backspace to delete whole word
 [ bugs ]
 [ misc ]

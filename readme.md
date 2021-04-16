@@ -1,5 +1,5 @@
 <!-- omit in toc -->
-# @m4rch/commands
+# @m4rch/command
 
 # about
 
@@ -61,6 +61,10 @@ the type of an object determines the way the user inputs the data and the type o
 
 the type "input" is a simple string input
 
+- **"y/n"**
+
+simple yes or no prompt
+
 - **"select"**
 
 for the type "select" input you can choose one of several inputs
@@ -92,6 +96,14 @@ the question that gets prompted when the user has to input the answer
 the default option that gets selected when the user doesnt select anything
 
 if not defined the input will default to `undefined`
+
+\--- ***boolean*** ---  
+\--- ***optional*** ---  
+\--- ***for "y/n"*** ---
+
+the default value of either yes (`true`) or no (`false`)
+
+if not defined the default will be `false`
 
 ## select
 

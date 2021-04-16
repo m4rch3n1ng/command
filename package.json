@@ -1,6 +1,6 @@
 {
 	"name": "@m4rch/command",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "a small command line tool to easily get user input",
 	"main": "index.js",
 	"keywords": [
