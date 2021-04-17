@@ -1,7 +1,6 @@
-( v 17-04-2021 )
+( v 17-04-2021 II )
 [ general ]
 [ content ]
-	- y/n option
-	- control backspace to delete whole word
-[ bugs ]
+[ fixes ]
+	- y/n: answers gets properly deleted
 [ misc ]

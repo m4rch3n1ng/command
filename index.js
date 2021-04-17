@@ -187,6 +187,8 @@ class CommandTemplate {
 						stdout.moveCursor(-1)
 					}
 
+					answer = ""
+
 				} else if (key == "%0D") {
 
 					stdout.cursorTo(0)
