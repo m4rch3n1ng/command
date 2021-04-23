@@ -8,18 +8,19 @@ class CommandTemplate {
 			if (encodeURIComponent(data) == "%03") {
 				process.stdout.write("\n")
 				process.stdout.write("\x1B[?25h")
+				process.stdout.clearScreenDown()
 				
 				process.exit()
 			}
 		})
 
-		let answers = await this._get(this.options, settings)
+		let answers = await this._get(this.options)
 
 		if (!settings?.keepalive) process.stdin.destroy()
 		return answers
 	}
 
-	async _get ( options, settings ) {
+	async _get ( options ) {
 		let answers = {}
 
 		for (let option of options) {
@@ -37,7 +38,7 @@ class CommandTemplate {
 					break
 				}
 				case "multiple": {
-					answers[option.name] = await this._getMultiple(option.prompt, option.select)
+					answers[option.name] = await this._getMultiple(option.prompt, option.select, option.submit)
 					break
 				}
 			}
@@ -195,7 +196,7 @@ class CommandTemplate {
 					stdout.write(Array(write.length + answer.length).fill(" ").join(""))
 					stdout.cursorTo(0)
 
-					stdout.write(`${prompt}\x1b[33m${answer.length ? answer : def ? "y": "n" }\x1b[0m`)
+					stdout.write(`${prompt}\x1b[33m${answer.length ? answer.toLowerCase() : def ? "y": "n" }\x1b[0m`)
 
 					stdout.write("\n")
 					stdin.removeListener("data", yn)
@@ -290,25 +291,25 @@ class CommandTemplate {
 		})
 	}
 
-	async _getMultiple ( prompt, select ) {
+	async _getMultiple ( prompt, select, submit ) {
 		const { stdin, stdout } = process
+		submit = typeof submit == "string" ? submit : "submit"
+
 		stdin.setRawMode(true)
 		stdout.write("\x1B[?25l")
 
-		let current = 0
+		let current = -1
 		let selected = []
 
 		stdout.write(`${prompt}\n`)
+		stdout.write(`\x1b[32m>>${submit}<<\x1b[0m\n`)
 
 		for (let line in select) {
 			selected[line] = false
 			stdout.write(`  ${select[line]}\n`)
 		}
-		stdout.write(`\x1b[32m  submit  \x1b[0m\n`)
 
 		stdout.moveCursor(0, -select.length - 1)
-		stdout.cursorTo(0)
-		stdout.write(`\x1b[36m> ${select[current]}\x1b[0m`)
 		stdout.cursorTo(0)
 
 		return new Promise(( resolve ) => {
@@ -317,8 +318,8 @@ class CommandTemplate {
 
 				if (key == "%1B%5BA") {
 
-					if (current == select.length) {
-						stdout.write("\x1b[32m  submit  \x1b[0m")
+					if (current == -1) {
+						stdout.write(`\x1b[32m  ${submit}  \x1b[0m`)
 					} else {
 						if (selected[current]) {
 							stdout.write(`\x1b[33m> \x1b[0m${select[current]}`)
@@ -329,8 +330,8 @@ class CommandTemplate {
 
 					stdout.cursorTo(0)
 
-					if (current == 0) {
-						current = select.length
+					if (current == -1) {
+						current = select.length - 1
 						stdout.moveCursor(0, select.length)
 					} else {
 						current--
@@ -339,8 +340,8 @@ class CommandTemplate {
 
 					stdout.cursorTo(0)
 
-					if (current == select.length) {
-						stdout.write("\x1b[32m>>submit<<\x1b[0m")
+					if (current == -1) {
+						stdout.write(`\x1b[32m>>${submit}<<\x1b[0m`)
 					} else {
 						if (selected[current]) {
 							stdout.write(`\x1b[33m> \x1b[36m${select[current]}\x1b[0m`)
@@ -353,8 +354,8 @@ class CommandTemplate {
 
 				} else if (key == "%1B%5BB") {
 
-					if (current == select.length) {
-						stdout.write("\x1b[32m  submit  \x1b[0m")
+					if (current == -1) {
+						stdout.write(`\x1b[32m  ${submit}  \x1b[0m`)
 					} else {
 						if (selected[current]) {
 							stdout.write(`\x1b[33m> \x1b[0m${select[current]}`)
@@ -365,8 +366,8 @@ class CommandTemplate {
 
 					stdout.cursorTo(0)
 
-					if (current == select.length) {
-						current = 0
+					if (current == select.length - 1) {
+						current = -1
 						stdout.moveCursor(0, -select.length)
 					} else {
 						current++
@@ -375,8 +376,8 @@ class CommandTemplate {
 
 					stdout.cursorTo(0)
 
-					if (current == select.length) {
-						stdout.write("\x1b[32m>>submit<<\x1b[0m")
+					if (current == -1) {
+						stdout.write(`\x1b[32m>>${submit}<<\x1b[0m`)
 					} else {
 						if (selected[current]) {
 							stdout.write(`\x1b[33m> \x1b[36m${select[current]}\x1b[0m`)
@@ -389,8 +390,8 @@ class CommandTemplate {
 
 				} else if (key == "%0D") {
 
-					if (current == select.length) {
-						stdout.moveCursor(0, -select.length)
+					if (current == -1) {
+						stdout.cursorTo(0)
 						stdout.clearScreenDown()
 
 						stdout.moveCursor(0, -1)
@@ -424,7 +425,6 @@ class CommandTemplate {
 			stdin.on("data", multiple)
 		})
 	}
-
 }
 
 module.exports = CommandTemplate

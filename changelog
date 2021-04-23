@@ -1,6 +1,7 @@
-( v 17-04-2021 II )
+( v 23-04-2021 )
 [ general ]
 [ content ]
 [ fixes ]
-	- y/n: answers gets properly deleted
 [ misc ]
+	- pushed "submit" button to the top
+	- added customizability to "submit" button

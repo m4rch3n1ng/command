@@ -1,2 +1,5 @@
+# default
 node_modules/
+
+# custom
 test.*

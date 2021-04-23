@@ -16,6 +16,7 @@ a small package to handle different types of command line input, especially usef
 	- [prompt](#prompt)
 	- [default](#default)
 	- [select](#select)
+	- [submit](#submit)
 	- [next](#next)
 - [examples](#examples)
 
@@ -39,7 +40,6 @@ class Command extends CommandTemplate {
 
 const command = new Command
 command.run()
-
 ```
 
 the get function returns an object.
@@ -112,6 +112,14 @@ if not defined the default will be `false`
 \--- ***for "multiple", "select"*** ---
 
 an array of values that the user can select from
+
+## submit
+
+\--- ***string*** ---  
+\--- ***optional*** ---  
+\--- ***for "multiple"*** ---
+
+a string that determines the name of the "submit" button
 
 ## next
 
