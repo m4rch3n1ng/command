@@ -1,7 +1,7 @@
-( v 23-04-2021 )
+( v 2021-04-27 )
 [ general ]
 [ content ]
+	- next support for multiple
 [ fixes ]
 [ misc ]
-	- pushed "submit" button to the top
-	- added customizability to "submit" button
+	- license

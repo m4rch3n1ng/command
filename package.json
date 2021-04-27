@@ -1,16 +1,17 @@
 {
 	"name": "@m4rch/command",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "a small command line tool to easily get user input",
+	"author": "m4rch",
 	"main": "index.js",
 	"keywords": [
+		"m4rch",
 		"command",
 		"cli"
 	],
+	"license": "Unlicense",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/m4rch3n1ng/command"
-	},
-	"author": "m4rch",
-	"license": "MIT"
+	}
 }

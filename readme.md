@@ -128,11 +128,19 @@ a string that determines the name of the "submit" button
 
 the questions that get prompted after the current question was answered
 
+---
+
 if next is an *object*, the values that get prompted are influenced by the decision on the current question
 
-if you decide, for example, for "pizza", then the code will look for an array, just like the default **options** array, as a value to the key "pizza". if one is found then these questions will be asked next. if none are found then the code will simply skip to the next question in the array
+if you choose, for example, "pizza", then the code will look for an array, just like the default **options** array, as a value to the key "pizza". if one is found then these questions will be asked next.
 
-if next is an *array*, then the code executes similar to if the items were simply put in the array
+if the type of the last option was "multiple" then for every chosen value will be checked if there is a corresponding array
+
+if none are found then the code will simply skip to the next question in the array
+
+---
+
+if next is an *array*, then the code executes similar to if the items were simply put into the array
 
 # examples
 

@@ -46,9 +46,15 @@ class CommandTemplate {
 			if (option.next && typeof option.next == "object") {
 				let nAnswers = null
 				if (Array.isArray(option.next)) {
-					nAnswers = await this._get(option.next)
-				} else if (Array.isArray(option.next[answers[option.name]])) {
-					nAnswers = await this._get(option.next[answers[option.name]])
+					answers = { ...answers, ...await this._get(option.next) }
+				} else {
+					if (option.type == "multiple") {
+						for (let sub of answers[option.name].filter(( el, i, arr ) => arr.indexOf(el) == i)) {
+							if (Array.isArray(option.next[sub])) answers = { ...answers, ...await this._get(option.next[sub]) }
+						}
+					} else if (Array.isArray(option.next[answers[option.name]])) {
+						nAnswers = await this._get(option.next[answers[option.name]])
+					}
 				}
 
 				answers = { ...answers, ...nAnswers }
