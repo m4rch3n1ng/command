@@ -16,6 +16,7 @@ a small package to handle different types of command line input, especially usef
 	- [prompt](#prompt)
 	- [default](#default)
 	- [select](#select)
+	- [instant](#instant)
 	- [submit](#submit)
 	- [next](#next)
 - [examples](#examples)
@@ -89,13 +90,13 @@ the question that gets prompted when the user has to input the answer
 
 ## default
 
-\--- ***string*** ---  
+\--- ***string, boolean, array*** ---  
 \--- ***optional*** ---  
-\--- ***for "input"*** ---
+\--- ***for "input", "y/n", "multiple"*** ---
 
 the default option that gets selected when the user doesnt select anything
 
-if not defined the input will default to `undefined`
+if not defined the input will default to `undefined`, `false` or `[]` respectively
 
 \--- ***boolean*** ---  
 \--- ***optional*** ---  
@@ -112,6 +113,14 @@ if not defined the default will be `false`
 \--- ***for "multiple", "select"*** ---
 
 an array of values that the user can select from
+
+## instant
+
+\--- ***boolean*** ---  
+\--- ***optional*** ---  
+\--- ***for "y/n"*** ---
+
+whether or not the user has to type enter to submit or if it submits instantaneously
 
 ## submit
 

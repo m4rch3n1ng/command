@@ -1,8 +1,6 @@
 class CommandTemplate {
 	async get ( settings ) {
-		this._validate(this.options)
-
-		if (!Array.isArray(this.options)) return {}
+		this.$validate(this.options)
 
 		process.stdin.on("data", ( data ) => {
 			if (encodeURIComponent(data) == "%03") {
@@ -14,31 +12,35 @@ class CommandTemplate {
 			}
 		})
 
-		let answers = await this._get(this.options)
+		let answers = await this.$get(this.options)
 
 		if (!settings?.keepalive) process.stdin.destroy()
 		return answers
 	}
 
-	async _get ( options ) {
+	async $get ( options ) {
 		let answers = {}
 
 		for (let option of options) {
 			switch (option.type) {
 				case "input": {
-					answers[option.name] = await this._getInput(option.prompt, option.default)
+					answers[option.name] = await this.$getInput(option.prompt, option.default)
 					break
 				}
 				case "y/n": {
-					answers[option.name] = await this._getYesNo(option.prompt, !!option.default)
+					answers[option.name] = await this.$getYesNo(option.prompt, !!option.default, !!option.instant)
 					break
 				}
 				case "select": {
-					answers[option.name] = await this._getSelect(option.prompt, option.select)
+					answers[option.name] = await this.$getSelect(option.prompt, option.select)
 					break
 				}
 				case "multiple": {
-					answers[option.name] = await this._getMultiple(option.prompt, option.select, option.submit)
+					let selected = Array(option.select.length).fill(false)
+
+					if (option.default) option.select.forEach(( item, index ) => option.default.includes(item) && (selected[index] = true))
+
+					answers[option.name] = await this.$getMultiple(option.prompt, option.select, selected, option.submit || "options")
 					break
 				}
 			}
@@ -46,14 +48,14 @@ class CommandTemplate {
 			if (option.next && typeof option.next == "object") {
 				let nAnswers = null
 				if (Array.isArray(option.next)) {
-					answers = { ...answers, ...await this._get(option.next) }
+					answers = { ...answers, ...await this.$get(option.next) }
 				} else {
 					if (option.type == "multiple") {
 						for (let sub of answers[option.name].filter(( el, i, arr ) => arr.indexOf(el) == i)) {
-							if (Array.isArray(option.next[sub])) answers = { ...answers, ...await this._get(option.next[sub]) }
+							if (Array.isArray(option.next[sub])) answers = { ...answers, ...await this.$get(option.next[sub]) }
 						}
 					} else if (Array.isArray(option.next[answers[option.name]])) {
-						nAnswers = await this._get(option.next[answers[option.name]])
+						nAnswers = await this.$get(option.next[answers[option.name]])
 					}
 				}
 
@@ -64,35 +66,58 @@ class CommandTemplate {
 		return answers
 	}
 
-	_validate ( options ) {
-		if (!Array.isArray(options)) throw new Error("options has to be of type Array")
+	$validate ( options ) {
+		if (!Array.isArray(options)) throw new Error(`options has to be of type Array`)
 
 		options.forEach(( option ) => {
 			if (typeof option.name != "string") throw new Error("name must be of type string")
 			if (typeof option.type != "string") throw new Error("type must be of type string")
 			if (typeof option.prompt != "string") throw new Error("prompt must be of type string")
 
-			if (![ "input", "y/n", "select", "multiple" ].includes(option.type)) throw new Error(`type must be "multiple", "select" or "input"`)
-
 			if ((option.type == "multiple" || option.type == "select") && !Array.isArray(option.select)) {
 				throw new Error(`select must be of type Array, if type is set to ${option.type}`)
 			}
 
-			if (option.next) {
+			switch (option.type) {
+				case "input":
+					if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"input\"")
+					break
+				case "y/n":
+					if ("default" in option && typeof option.default != "boolean") throw new Error("default must be of type boolean if type is set to \"y/n\"")
+					if ("instant" in option && typeof option.instant != "boolean") throw new Error("instant must be of type boolean if type is set to \"y/n\"")
+					break
+				case "select": {
+					if (!Array.isArray(option.select)) throw new Error("select must be of type array if type is set to select")
+					if (!option.select.length) throw new Error("select cannot be empty if type is set to select")
+					break
+				}
+				case "multiple": {
+					if (!Array.isArray(option.select)) throw new Error("select must be of type array if type is set to multiple")
+					if (!option.select.length) throw new Error("select cannot be empty if type is set to multiple")
+					if ("submit" in option && typeof option.submit != "string") throw new Error("submit must be of type string if type is set to \"submit\"")
+					if ("default" in option && !Array.isArray(option.default)) throw new Error("default must be of type array if type is set to \"multiple\"")
+					break
+				}
+				default: {
+					throw new Error(`type must be "multiple", "select" or "input"`)
+				}
+			}
+
+			if ("next" in option) {
 				if (typeof option.next != "object") throw new Error("next must be of type object")
 
 				if (Array.isArray(option.next)) {
-					this._validate(option.next)
+					this.$validate(option.next)
 				} else {
 					for (let next in option.next) {
-						this._validate(option.next[next])
+						this.$validate(option.next[next])
 					}
 				}
 			}
 		})
 	}
 
-	async _getInput ( prompt, def ) {
+	async $getInput ( prompt, def ) {
 		const { stdin, stdout } = process
 		stdin.setRawMode(true)
 
@@ -166,7 +191,7 @@ class CommandTemplate {
 		})
 	}
 
-	async _getYesNo ( prompt, def ) {
+	async $getYesNo ( prompt, def, instant ) {
 		const { stdin, stdout } = process
 		stdin.setRawMode(true)
 
@@ -180,6 +205,19 @@ class CommandTemplate {
 				let key = encodeURIComponent(data)
 
 				if (/^[yn]$/i.test(key)) {
+
+					if (instant) {
+						stdout.cursorTo(0)
+						stdout.write(Array(write.length).fill(" ").join(""))
+						stdout.cursorTo(0)
+
+						stdout.write(`${prompt}\x1b[33m${answer.length ? answer.toLowerCase() : def ? "y": "n" }\x1b[0m`)
+
+						stdout.write("\n")
+						stdin.removeListener("data", yn)
+
+						return resolve(key.toLowerCase() == "y")
+					}
 
 					if (answer.length) stdout.moveCursor(-1)
 
@@ -199,7 +237,7 @@ class CommandTemplate {
 				} else if (key == "%0D") {
 
 					stdout.cursorTo(0)
-					stdout.write(Array(write.length + answer.length).fill(" ").join(""))
+					stdout.write(Array(write.length + 1).fill(" ").join(""))
 					stdout.cursorTo(0)
 
 					stdout.write(`${prompt}\x1b[33m${answer.length ? answer.toLowerCase() : def ? "y": "n" }\x1b[0m`)
@@ -216,7 +254,7 @@ class CommandTemplate {
 		})
 	}
 
-	async _getSelect ( prompt, select ) {
+	async $getSelect ( prompt, select ) {
 		const { stdin, stdout } = process
 		stdin.setRawMode(true)
 		stdout.write("\x1B[?25l")
@@ -297,22 +335,23 @@ class CommandTemplate {
 		})
 	}
 
-	async _getMultiple ( prompt, select, submit ) {
+	async $getMultiple ( prompt, select, selected, submit ) {
 		const { stdin, stdout } = process
-		submit = typeof submit == "string" ? submit : "submit"
 
 		stdin.setRawMode(true)
 		stdout.write("\x1B[?25l")
 
 		let current = -1
-		let selected = []
 
 		stdout.write(`${prompt}\n`)
 		stdout.write(`\x1b[32m>>${submit}<<\x1b[0m\n`)
 
 		for (let line in select) {
-			selected[line] = false
-			stdout.write(`  ${select[line]}\n`)
+			if (selected[line]) {
+				stdout.write(`\x1b[33m>\x1b[0m ${select[line]}\n`)
+			} else {
+				stdout.write(`  ${select[line]}\n`)
+			}
 		}
 
 		stdout.moveCursor(0, -select.length - 1)

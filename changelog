@@ -1,7 +1,8 @@
 ( v 2021-04-27 )
 [ general ]
 [ content ]
-	- next support for multiple
+	- added instant option to y/n
+	- added default option to multiple
 [ fixes ]
 [ misc ]
-	- license
+	- changed prefix of internal functions from _ to $
