@@ -38,9 +38,9 @@ class CommandTemplate {
 				case "multiple": {
 					let selected = Array(option.select.length).fill(false)
 
-					if (option.default) option.select.forEach(( item, index ) => option.default.includes(item) && (selected[index] = true))
+					if (option.default) selected = option.select.map(( item ) => option.default.includes(item))
 
-					answers[option.name] = await this.$getMultiple(option.prompt, option.select, selected, option.submit || "options")
+					answers[option.name] = await this.$getMultiple(option.prompt, option.select, selected, option.submit || "select")
 					break
 				}
 			}
@@ -195,7 +195,7 @@ class CommandTemplate {
 		const { stdin, stdout } = process
 		stdin.setRawMode(true)
 
-		prompt = /[\?\:\.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
+		prompt = /[?!:.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
 		let write = `${prompt}(${def ? "Y/n" : "y/N"}) `
 		stdout.write(write)
 
@@ -211,7 +211,7 @@ class CommandTemplate {
 						stdout.write(Array(write.length).fill(" ").join(""))
 						stdout.cursorTo(0)
 
-						stdout.write(`${prompt}\x1b[33m${answer.length ? answer.toLowerCase() : def ? "y": "n" }\x1b[0m`)
+						stdout.write(`${prompt}\x1b[33m${key.toLowerCase()}\x1b[0m`)
 
 						stdout.write("\n")
 						stdin.removeListener("data", yn)

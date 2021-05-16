@@ -1,8 +1,7 @@
-( v 2021-04-27 )
+( v 2021-05-16 )
 [ general ]
 [ content ]
-	- added instant option to y/n
-	- added default option to multiple
 [ fixes ]
+	- y/n: selection will be correctly displayed if instant is set
+	- multiple: changed default submit button to select
 [ misc ]
-	- changed prefix of internal functions from _ to $

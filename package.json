@@ -1,6 +1,6 @@
 {
 	"name": "@m4rch/command",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "a small command line tool to easily get user input",
 	"author": "m4rch",
 	"main": "index.js",
@@ -13,5 +13,6 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/m4rch3n1ng/command"
-	}
+	},
+	"type": "commonjs"
 }
