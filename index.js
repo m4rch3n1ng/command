@@ -1,6 +1,6 @@
-class CommandTemplate {
+export class CommandTemplate {
 	async get ( settings ) {
-		this.$validate(this.options)
+		this._validate(this.options)
 
 		process.stdin.on("data", ( data ) => {
 			if (encodeURIComponent(data) == "%03") {
@@ -12,35 +12,36 @@ class CommandTemplate {
 			}
 		})
 
-		let answers = await this.$get(this.options)
+		let answers = await this._get(this.options)
 
 		if (!settings?.keepalive) process.stdin.destroy()
 		return answers
 	}
 
-	async $get ( options ) {
+	async _get ( options ) {
 		let answers = {}
 
 		for (let option of options) {
 			switch (option.type) {
 				case "input": {
-					answers[option.name] = await this.$getInput(option.prompt, option.default)
+					answers[option.name] = await this._getInput(option.prompt, option.default)
 					break
 				}
 				case "y/n": {
-					answers[option.name] = await this.$getYesNo(option.prompt, !!option.default, !!option.instant)
+					answers[option.name] = await this._getYesNo(option.prompt, !!option.default, !!option.instant)
 					break
 				}
 				case "select": {
-					answers[option.name] = await this.$getSelect(option.prompt, option.select)
+					let def = option.select.includes(option.default) ? option.select.indexOf(option.default) : 0
+
+					answers[option.name] = await this._getSelect(option.prompt, option.select, def)
 					break
 				}
 				case "multiple": {
 					let selected = Array(option.select.length).fill(false)
-
 					if (option.default) selected = option.select.map(( item ) => option.default.includes(item))
 
-					answers[option.name] = await this.$getMultiple(option.prompt, option.select, selected, option.submit || "select")
+					answers[option.name] = await this._getMultiple(option.prompt, option.select, selected, option.submit || "select")
 					break
 				}
 			}
@@ -48,14 +49,14 @@ class CommandTemplate {
 			if (option.next && typeof option.next == "object") {
 				let nAnswers = null
 				if (Array.isArray(option.next)) {
-					answers = { ...answers, ...await this.$get(option.next) }
+					answers = { ...answers, ...await this._get(option.next) }
 				} else {
 					if (option.type == "multiple") {
 						for (let sub of answers[option.name].filter(( el, i, arr ) => arr.indexOf(el) == i)) {
-							if (Array.isArray(option.next[sub])) answers = { ...answers, ...await this.$get(option.next[sub]) }
+							if (Array.isArray(option.next[sub])) answers = { ...answers, ...await this._get(option.next[sub]) }
 						}
 					} else if (Array.isArray(option.next[answers[option.name]])) {
-						nAnswers = await this.$get(option.next[answers[option.name]])
+						nAnswers = await this._get(option.next[answers[option.name]])
 					}
 				}
 
@@ -66,7 +67,7 @@ class CommandTemplate {
 		return answers
 	}
 
-	$validate ( options ) {
+	_validate ( options ) {
 		if (!Array.isArray(options)) throw new Error(`options has to be of type Array`)
 
 		options.forEach(( option ) => {
@@ -79,16 +80,19 @@ class CommandTemplate {
 			}
 
 			switch (option.type) {
-				case "input":
+				case "input": {
 					if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"input\"")
 					break
-				case "y/n":
+				}
+				case "y/n": {
 					if ("default" in option && typeof option.default != "boolean") throw new Error("default must be of type boolean if type is set to \"y/n\"")
 					if ("instant" in option && typeof option.instant != "boolean") throw new Error("instant must be of type boolean if type is set to \"y/n\"")
 					break
+				}
 				case "select": {
 					if (!Array.isArray(option.select)) throw new Error("select must be of type array if type is set to select")
 					if (!option.select.length) throw new Error("select cannot be empty if type is set to select")
+					if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"select\"")
 					break
 				}
 				case "multiple": {
@@ -107,17 +111,17 @@ class CommandTemplate {
 				if (typeof option.next != "object") throw new Error("next must be of type object")
 
 				if (Array.isArray(option.next)) {
-					this.$validate(option.next)
+					this._validate(option.next)
 				} else {
 					for (let next in option.next) {
-						this.$validate(option.next[next])
+						this._validate(option.next[next])
 					}
 				}
 			}
 		})
 	}
 
-	async $getInput ( prompt, def ) {
+	async _getInput ( prompt, def ) {
 		const { stdin, stdout } = process
 		stdin.setRawMode(true)
 
@@ -191,7 +195,7 @@ class CommandTemplate {
 		})
 	}
 
-	async $getYesNo ( prompt, def, instant ) {
+	async _getYesNo ( prompt, def, instant ) {
 		const { stdin, stdout } = process
 		stdin.setRawMode(true)
 
@@ -254,12 +258,11 @@ class CommandTemplate {
 		})
 	}
 
-	async $getSelect ( prompt, select ) {
+	async _getSelect ( prompt, select, def ) {
 		const { stdin, stdout } = process
 		stdin.setRawMode(true)
 		stdout.write("\x1B[?25l")
 
-		let current = 0
 		stdout.write(`${prompt}\n`)
 
 		for (let line in select) {
@@ -268,6 +271,10 @@ class CommandTemplate {
 
 		stdout.moveCursor(0, -select.length)
 		stdout.cursorTo(0)
+
+		let current = def
+		stdout.moveCursor(0, current)
+
 		stdout.write(`\x1b[36m> ${select[current]}\x1b[0m`)
 		stdout.cursorTo(0)
 
@@ -335,7 +342,7 @@ class CommandTemplate {
 		})
 	}
 
-	async $getMultiple ( prompt, select, selected, submit ) {
+	async _getMultiple ( prompt, select, selected, submit ) {
 		const { stdin, stdout } = process
 
 		stdin.setRawMode(true)
@@ -472,4 +479,4 @@ class CommandTemplate {
 	}
 }
 
-module.exports = CommandTemplate
+export default CommandTemplate

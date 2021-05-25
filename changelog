@@ -1,7 +1,0 @@
-( v 2021-05-16 )
-[ general ]
-[ content ]
-[ fixes ]
-	- y/n: selection will be correctly displayed if instant is set
-	- multiple: changed default submit button to select
-[ misc ]

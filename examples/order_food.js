@@ -1,5 +1,4 @@
-// const CommandTemplate = require("@m4rch/command")
-const CommandTemplate = require("..")
+import CommandTemplate from "@m4rch/command"
 
 class Commands extends CommandTemplate {
 	options = [
