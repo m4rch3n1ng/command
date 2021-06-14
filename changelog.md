@@ -1,5 +1,12 @@
 # @m4rch/command
 
+## v0.2.0
+
+*2021-06-14*
+
+- full overhaul of the system
+- class -> function
+
 ## v0.1.7
 
 *2021-05-19*

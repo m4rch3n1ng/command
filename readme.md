@@ -26,21 +26,16 @@ a small package to handle different types of command line input, especially usef
 to use it require the module and extend it as a class, add the property **options** as an array to it, and call the asynchrounous function **get** to get the user input.
 
 ```js
-const CommandTemplate = require("@m4rch/option")
+import command from "@m4rch/command"
 
-class Command extends CommandTemplate {
-	options = [
-		// options here
-	]
-	async run () {
-		let options = await this.get()
+let options = [
+	// options go here
+]
 
-		console.log(options)
-	}
-}
-
-const command = new Command
-command.run()
+command()
+	.get(options)
+	.action(console.log)
+	.run()
 ```
 
 the get function returns an object.
