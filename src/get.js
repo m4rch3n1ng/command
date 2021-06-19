@@ -64,60 +64,6 @@ async function _get ( options ) {
 	return answers
 }
 
-export function validate ( options ) {
-	if (!Array.isArray(options)) throw new Error(`options has to be of type Array`)
-
-	options.forEach(( option ) => {
-		if (typeof option.name != "string") throw new Error("name must be of type string")
-		if (typeof option.type != "string") throw new Error("type must be of type string")
-		if (typeof option.prompt != "string") throw new Error("prompt must be of type string")
-
-		if ((option.type == "multiple" || option.type == "select") && !Array.isArray(option.select)) {
-			throw new Error(`select must be of type Array, if type is set to ${option.type}`)
-		}
-
-		switch (option.type) {
-			case "input": {
-				if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"input\"")
-				break
-			}
-			case "y/n": {
-				if ("default" in option && typeof option.default != "boolean") throw new Error("default must be of type boolean if type is set to \"y/n\"")
-				if ("instant" in option && typeof option.instant != "boolean") throw new Error("instant must be of type boolean if type is set to \"y/n\"")
-				break
-			}
-			case "select": {
-				if (!Array.isArray(option.select)) throw new Error("select must be of type array if type is set to select")
-				if (!option.select.length) throw new Error("select cannot be empty if type is set to select")
-				if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"select\"")
-				break
-			}
-			case "multiple": {
-				if (!Array.isArray(option.select)) throw new Error("select must be of type array if type is set to multiple")
-				if (!option.select.length) throw new Error("select cannot be empty if type is set to multiple")
-				if ("submit" in option && typeof option.submit != "string") throw new Error("submit must be of type string if type is set to \"submit\"")
-				if ("default" in option && !Array.isArray(option.default)) throw new Error("default must be of type array if type is set to \"multiple\"")
-				break
-			}
-			default: {
-				throw new Error(`type must be "multiple", "select" or "input"`)
-			}
-		}
-
-		if ("next" in option) {
-			if (typeof option.next != "object") throw new Error("next must be of type object")
-
-			if (Array.isArray(option.next)) {
-				validate(option.next)
-			} else {
-				for (let next in option.next) {
-					validate(option.next[next])
-				}
-			}
-		}
-	})
-}
-
 async function _getInput ( prompt, def ) {
 	const { stdin, stdout } = process
 	stdin.setRawMode(true)
@@ -131,56 +77,63 @@ async function _getInput ( prompt, def ) {
 		function line ( data ) {
 			let key = encodeURIComponent(data)
 
-			if (key == "%20") {
-
-				answer += " "
-				stdout.write(" ")
-
-			}
-			if (/^[a-zA-Z0-9\-_]$/.test(key)) {
-
-				answer += key
-				stdout.write(key)
-
-			} else if (key == "%08") {
-
-				if (answer.length) {
-					stdout.moveCursor(-1)
+			switch (key) {
+				case "%20": {
+					answer += " "
 					stdout.write(" ")
-					stdout.moveCursor(-1)
 
-					answer = answer.slice(0, -1)
+					break
 				}
+				case "%08": {
+					if (answer.length) {
+						stdout.moveCursor(-1)
+						stdout.write(" ")
+						stdout.moveCursor(-1)
 
-			} else if (key == "%17") {
-
-				if (answer.length) {
-					let back = 0
-					if (!answer.endsWith(" ")) {
-						back = answer.match(/( +)?[^ ]+$/g)[0].length
-					} else {
-						back = answer.match(/( +)$/)[0].length
+						answer = answer.slice(0, -1)
 					}
 
-					stdout.moveCursor(-back)
-					stdout.write(Array(back).fill(" ").join(""))
-					stdout.moveCursor(-back)
-
-					answer = answer.slice(0, -back)
+					break
 				}
+				case "%17": {
+					if (answer.length) {
+						let back = 0
+						if (!answer.endsWith(" ")) {
+							back = answer.match(/( +)?[^ ]+$/g)[0].length
+						} else {
+							back = answer.match(/( +)$/)[0].length
+						}
 
-			} else if (key == "%0D") {
-				stdout.cursorTo(0)
-				stdout.write(Array(write.length + answer.length).fill(" ").join(""))
-				stdout.cursorTo(0)
+						stdout.moveCursor(-back)
+						stdout.write(Array(back).fill(" ").join(""))
+						stdout.moveCursor(-back)
 
-				if (!answer.length) answer = def
-				stdout.write(`${prompt}\x1b[33m${answer || ""}\x1b[0m`)
+						answer = answer.slice(0, -back)
+					}
 
-				stdout.write("\n")
-				stdin.removeListener("data", line)
+					break
+				}
+				case "%0D": {
+					stdout.cursorTo(0)
+					stdout.write(Array(write.length + answer.length).fill(" ").join(""))
+					stdout.cursorTo(0)
 
-				resolve(answer)
+					if (!answer.length) answer = def
+					stdout.write(`${prompt}\x1b[33m${answer || ""}\x1b[0m`)
+
+					stdout.write("\n")
+					stdin.removeListener("data", line)
+
+					return resolve(answer)
+				}
+				default: {
+					if (/^[\w\-\/\\$@^!.:,;#+]$/.test(data)) {
+						answer += data
+						stdout.write(data)
+					}
+
+					break
+				}
 			}
 		}
 

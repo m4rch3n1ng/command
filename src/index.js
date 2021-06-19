@@ -1,14 +1,13 @@
-import { default as get, validate } from "./functions.js"
+import get from "./get.js"
+import { validate } from "./utils.js"
 
-export default function command () {
+export default function command ( object ) {
 	let action = null
-	let json = null
+	let json = object ? validate(object) : null
 
-	let self = Object.freeze({
+	const self = Object.freeze({
 		get ( object ) {
-			validate(object)
-			json = object
-
+			json = validate(object)
 			return self
 		},
 		action ( fn ) {
@@ -19,12 +18,11 @@ export default function command () {
 		},
 		async run ( settings ) {
 			if (json) {
-				let answers = await get(json, settings)
+				const answers = await get(json, settings)
 
 				if (action) action(answers)
-
 				return answers
-			} else throw new Error("cannot")
+			} else throw new Error("cannot run without a given object")
 		}
 	})
 

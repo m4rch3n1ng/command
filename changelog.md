@@ -1,5 +1,16 @@
 # @m4rch/command
 
+## v0.2.1
+
+*2021-06-19*
+
+- added support for passing option directly to command()
+
+***
+
+- moved some functions
+- renamed some files
+
 ## v0.2.0
 
 *2021-06-14*
