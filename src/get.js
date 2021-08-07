@@ -1,18 +1,21 @@
 export default async function get ( options, settings ) {
-	process.stdin.on("data", ( data ) => {
-		if (encodeURIComponent(data) == "%03") {
-			process.stdout.write("\n")
-			process.stdout.write("\x1B[?25h")
-			process.stdout.clearScreenDown()
-
-			process.exit()
-		}
-	})
+	process.stdin.on("data", toSigInt)
 
 	let answers = await _get(options)
 
+	process.stdin.removeListener("data", toSigInt)
 	if (!settings || !settings.keepalive) process.stdin.destroy()
 	return answers
+}
+
+function toSigInt (data) {
+	if (encodeURIComponent(data) == "%03") {
+		process.stdout.write("\n")
+		process.stdout.write("\x1B[?25h")
+		process.stdout.clearScreenDown()
+
+		process.exit()
+	}
 }
 
 async function _get ( options ) {
@@ -127,7 +130,7 @@ async function _getInput ( prompt, def ) {
 					return resolve(answer)
 				}
 				default: {
-					if (/^[\w\-\/\\$@^!.:,;#+]$/.test(data)) {
+					if (/^[\w\-\/\\$@^!.:,;#+üöäßø]+$/i.test(data)) {
 						answer += data
 						stdout.write(data)
 					}

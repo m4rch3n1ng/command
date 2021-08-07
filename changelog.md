@@ -1,5 +1,16 @@
 # @m4rch/command
 
+## v0.2.2
+
+*2021-08-07*
+
+- input: support for ä, ö, ü and ø
+- input: added support for pasting
+
+***
+
+- will now remove listener on finish
+
 ## v0.2.1
 
 *2021-06-19*
