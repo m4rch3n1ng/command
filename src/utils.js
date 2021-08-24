@@ -1,5 +1,8 @@
 export function validate ( options ) {
-	if (!Array.isArray(options)) throw new Error(`options has to be of type Array`)
+	if (!Array.isArray(options)) {
+		validate([ options ])
+		return options
+	}
 
 	options.forEach(( option ) => {
 		if (typeof option.name != "string") throw new Error("name must be of type string")
@@ -34,7 +37,7 @@ export function validate ( options ) {
 				break
 			}
 			default: {
-				throw new Error(`type must be "multiple", "select" or "input"`)
+				throw new Error("type must be \"multiple\", \"y/n\", \"select\" or \"input\"")
 			}
 		}
 
@@ -44,7 +47,7 @@ export function validate ( options ) {
 			if (Array.isArray(option.next)) {
 				validate(option.next)
 			} else {
-				for (let next in option.next) {
+				for (const next in option.next) {
 					validate(option.next[next])
 				}
 			}

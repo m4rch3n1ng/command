@@ -1,14 +1,14 @@
 export default async function get ( options, settings ) {
 	process.stdin.on("data", toSigInt)
 
-	let answers = await _get(options)
+	const answers = await _get(options)
 
 	process.stdin.removeListener("data", toSigInt)
 	if (!settings || !settings.keepalive) process.stdin.destroy()
 	return answers
 }
 
-function toSigInt (data) {
+function toSigInt ( data ) {
 	if (encodeURIComponent(data) == "%03") {
 		process.stdout.write("\n")
 		process.stdout.write("\x1B[?25h")
@@ -19,9 +19,10 @@ function toSigInt (data) {
 }
 
 async function _get ( options ) {
-	let answers = {}
+	if (!Array.isArray(options)) return await _get([ options ])
 
-	for (let option of options) {
+	let answers = {}
+	for (const option of options) {
 		switch (option.type) {
 			case "input": {
 				answers[option.name] = await _getInput(option.prompt, option.default)
@@ -32,8 +33,7 @@ async function _get ( options ) {
 				break
 			}
 			case "select": {
-				let def = option.select.includes(option.default) ? option.select.indexOf(option.default) : 0
-
+				const def = option.select.includes(option.default) ? option.select.indexOf(option.default) : 0
 				answers[option.name] = await _getSelect(option.prompt, option.select, def)
 				break
 			}
@@ -52,10 +52,10 @@ async function _get ( options ) {
 				answers = { ...answers, ...await _get(option.next) }
 			} else {
 				if (option.type == "multiple") {
-					for (let sub of answers[option.name].filter(( el, i, arr ) => arr.indexOf(el) == i)) {
+					for (const sub of answers[option.name].filter(( el, i, arr ) => arr.indexOf(el) == i)) {
 						if (Array.isArray(option.next[sub])) answers = { ...answers, ...await _get(option.next[sub]) }
 					}
-				} else if (Array.isArray(option.next[answers[option.name]])) {
+				} else if (typeof option.next[answers[option.name]] == "object") {
 					nAnswers = await _get(option.next[answers[option.name]])
 				}
 			}
@@ -71,14 +71,14 @@ async function _getInput ( prompt, def ) {
 	const { stdin, stdout } = process
 	stdin.setRawMode(true)
 
-	prompt = /[\?\:\.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
-	let write = def ? `${prompt}(${def}) ` : `${prompt}`
+	prompt = /[?:.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
+	const write = def ? `${prompt}(${def}) ` : `${prompt}`
 	stdout.write(write)
 
 	let answer = ""
 	return new Promise(( resolve ) => {
 		function line ( data ) {
-			let key = encodeURIComponent(data)
+			const key = encodeURIComponent(data)
 
 			switch (key) {
 				case "%20": {
@@ -130,7 +130,7 @@ async function _getInput ( prompt, def ) {
 					return resolve(answer)
 				}
 				default: {
-					if (/^[\w\-\/\\$@^!.:,;#+üöäßø]+$/i.test(data)) {
+					if (/^[\w\d\-\\/_$@=^?!.:,;#+*|"'üöäßø]+$/i.test(data)) {
 						answer += data
 						stdout.write(data)
 					}
@@ -149,13 +149,13 @@ async function _getYesNo ( prompt, def, instant ) {
 	stdin.setRawMode(true)
 
 	prompt = /[?!:.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
-	let write = `${prompt}(${def ? "Y/n" : "y/N"}) `
+	const write = `${prompt}(${def ? "Y/n" : "y/N"}) `
 	stdout.write(write)
 
 	let answer = ""
 	return new Promise(( resolve ) => {
 		function yn ( data ) {
-			let key = encodeURIComponent(data)
+			const key = encodeURIComponent(data)
 
 			if (/^[yn]$/i.test(key)) {
 				if (instant) {
@@ -171,10 +171,12 @@ async function _getYesNo ( prompt, def, instant ) {
 					return resolve(key.toLowerCase() == "y")
 				}
 
-				if (answer.length) stdout.moveCursor(-1)
+				if (answer != key) {
+					if (answer.length) stdout.moveCursor(-1)
 
-				answer = key
-				stdout.write(key)
+					answer = key
+					stdout.write(key)
+				}
 			} else if (key == "%08" || key == "%17") {
 				if (answer.length) {
 					stdout.moveCursor(-1)
@@ -208,7 +210,7 @@ async function _getSelect ( prompt, select, def ) {
 
 	stdout.write(`${prompt}\n`)
 
-	for (let line in select) {
+	for (const line in select) {
 		stdout.write(`  ${select[line]}\n`)
 	}
 
@@ -223,10 +225,9 @@ async function _getSelect ( prompt, select, def ) {
 
 	return await new Promise(( resolve ) => {
 		function multiple ( data ) {
-			let key = encodeURIComponent(data)
+			const key = encodeURIComponent(data)
 
 			if (key == "%1B%5BA") {
-
 				stdout.write(`\x1b[0m  ${select[current]}`)
 				stdout.cursorTo(0)
 
@@ -241,9 +242,7 @@ async function _getSelect ( prompt, select, def ) {
 				stdout.cursorTo(0)
 				stdout.write(`\x1b[36m> ${select[current]}`)
 				stdout.cursorTo(0)
-
 			} else if (key == "%1B%5BB") {
-
 				stdout.write(`\x1b[0m  ${select[current]}`)
 				stdout.cursorTo(0)
 
@@ -258,9 +257,7 @@ async function _getSelect ( prompt, select, def ) {
 				stdout.cursorTo(0)
 				stdout.write(`\x1b[36m> ${select[current]}`)
 				stdout.cursorTo(0)
-
 			} else if (key == "%0D") {
-
 				stdout.moveCursor(0, -select.length + (select.length - current))
 				stdout.clearScreenDown()
 				stdout.write("\x1b[0m")
@@ -268,7 +265,7 @@ async function _getSelect ( prompt, select, def ) {
 				stdout.moveCursor(0, -1)
 				stdout.cursorTo(prompt.length)
 
-				stdout.write(`${/[\?\:\.]$/.test(prompt) ? "" : ":"} \x1b[33m${select[current]}\x1b[0m`)
+				stdout.write(`${/[?:.]$/.test(prompt) ? "" : ":"} \x1b[33m${select[current]}\x1b[0m`)
 
 				stdout.cursorTo(0)
 				stdout.moveCursor(0, 1)
@@ -277,7 +274,6 @@ async function _getSelect ( prompt, select, def ) {
 				stdin.removeListener("data", multiple)
 
 				resolve(select[current])
-
 			}
 		}
 
@@ -296,7 +292,7 @@ async function _getMultiple ( prompt, select, selected, submit ) {
 	stdout.write(`${prompt}\n`)
 	stdout.write(`\x1b[32m>>${submit}<<\x1b[0m\n`)
 
-	for (let line in select) {
+	for (const line in select) {
 		if (selected[line]) {
 			stdout.write(`\x1b[33m>\x1b[0m ${select[line]}\n`)
 		} else {
@@ -309,10 +305,9 @@ async function _getMultiple ( prompt, select, selected, submit ) {
 
 	return new Promise(( resolve ) => {
 		function multiple ( data ) {
-			let key = encodeURIComponent(data)
+			const key = encodeURIComponent(data)
 
 			if (key == "%1B%5BA") {
-
 				if (current == -1) {
 					stdout.write(`\x1b[32m  ${submit}  \x1b[0m`)
 				} else {
@@ -346,9 +341,7 @@ async function _getMultiple ( prompt, select, selected, submit ) {
 				}
 
 				stdout.cursorTo(0)
-
 			} else if (key == "%1B%5BB") {
-
 				if (current == -1) {
 					stdout.write(`\x1b[32m  ${submit}  \x1b[0m`)
 				} else {
@@ -382,9 +375,7 @@ async function _getMultiple ( prompt, select, selected, submit ) {
 				}
 
 				stdout.cursorTo(0)
-
 			} else if (key == "%0D") {
-
 				if (current == -1) {
 					stdout.cursorTo(0)
 					stdout.clearScreenDown()
@@ -392,7 +383,7 @@ async function _getMultiple ( prompt, select, selected, submit ) {
 					stdout.moveCursor(0, -1)
 					stdout.cursorTo(prompt.length)
 
-					let answer = selected.map(( el, i ) => el && select[i]).filter(( el ) => el != false)
+					const answer = selected.map(( el, i ) => el && select[i]).filter(( el ) => el != false)
 					stdout.write(` \x1b[33m${answer.join("\x1b[39m, \x1b[33m")}\x1b[0m`)
 
 					stdout.cursorTo(0)
@@ -413,7 +404,6 @@ async function _getMultiple ( prompt, select, selected, submit ) {
 				}
 
 				stdout.cursorTo(0)
-
 			}
 		}
 

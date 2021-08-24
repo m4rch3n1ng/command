@@ -1,10 +1,28 @@
 # @m4rch/command
 
+## v0.3.0
+
+*2021-08-24*
+
+- added support for non-array options
+
+***
+
+- input: added support for _, =, ?, |, *, ", '
+
+***
+
+- y/n: stopped replacing letter when pressed again
+- fixed outdated readme.md
+- `let` -> `const`
+- removed examples
+- removed unnecessary escapes
+
 ## v0.2.2
 
 *2021-08-07*
 
-- input: support for ä, ö, ü and ø
+- input: support for ä, ö, ü, ß and ø
 - input: added support for pasting
 
 ***

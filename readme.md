@@ -19,20 +19,40 @@ a small package to handle different types of command line input, especially usef
 	- [instant](#instant)
 	- [submit](#submit)
 	- [next](#next)
-- [examples](#examples)
 
 # use
 
-to use it require the module and extend it as a class, add the property **options** as an array to it, and call the asynchrounous function **get** to get the user input.
+<!-- to use it require the module and extend it as a class, add the property **options** as an array to it, and call the asynchrounous function **get** to get the user input. -->
+to use it import the module
 
 ```js
 import command from "@m4rch/command"
+```
 
-let options = [
+create an array with objects of `options` or a single object of `options`
+
+```js
+const options = [
 	// options go here
 ]
 
-command()
+// or
+
+const options = {
+	// ...options
+}
+```
+
+and then call the imported function with the `options` (or add it via the `.get()` function), _optionally_ add an action via the `.action()` command on what to do, when the answers are in, and then call the asynchronous `.run()`, which returns the answers as well as call the action
+
+```js
+const answers = await command(options)
+	.action(console.log)
+	.run()
+
+// or
+
+const answers = await command()
 	.get(options)
 	.action(console.log)
 	.run()
@@ -132,22 +152,16 @@ a string that determines the name of the "submit" button
 
 the questions that get prompted after the current question was answered
 
----
+***
 
 if next is an *object*, the values that get prompted are influenced by the decision on the current question
 
-if you choose, for example, "pizza", then the code will look for an array, just like the default **options** array, as a value to the key "pizza". if one is found then these questions will be asked next.
+if you choose, for example, "pizza", then the code will look for an object like the default `options` array / `options` object, as a value to the key "pizza". if one is found then these questions will be asked next.
 
 if the type of the last option was "multiple" then for every chosen value will be checked if there is a corresponding array
 
-if none are found then the code will simply skip to the next question in the array
+if none are found then the code will simply skip to the next question in the array or end
 
----
+***
 
 if next is an *array*, then the code executes similar to if the items were simply put into the array
-
-# examples
-
-for examples look in the `examples` folder
-
-(more examples may be added some time in the future)
