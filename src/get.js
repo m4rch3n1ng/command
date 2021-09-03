@@ -1,14 +1,14 @@
-export default async function get ( options, settings ) {
-	process.stdin.on("data", toSigInt)
+export default async function get ( options, { keepalive } = {}) {
+	process.stdin.on("data", handleSigInt)
 
 	const answers = await _get(options)
 
-	process.stdin.removeListener("data", toSigInt)
-	if (!settings || !settings.keepalive) process.stdin.destroy()
+	process.stdin.removeListener("data", handleSigInt)
+	if (!keepalive) process.stdin.destroy()
 	return answers
 }
 
-function toSigInt ( data ) {
+function handleSigInt ( data ) {
 	if (encodeURIComponent(data) == "%03") {
 		process.stdout.write("\n")
 		process.stdout.write("\x1B[?25h")
@@ -25,11 +25,11 @@ async function _get ( options ) {
 	for (const option of options) {
 		switch (option.type) {
 			case "input": {
-				answers[option.name] = await _getInput(option.prompt, option.default)
+				answers[option.name] = await _getInput(option.prompt, option.default, !!option.required, option.validate)
 				break
 			}
 			case "y/n": {
-				answers[option.name] = await _getYesNo(option.prompt, !!option.default, !!option.instant)
+				answers[option.name] = await _getYesNo(option.prompt, option.default, option.instant)
 				break
 			}
 			case "select": {
@@ -67,26 +67,23 @@ async function _get ( options ) {
 	return answers
 }
 
-async function _getInput ( prompt, def ) {
+async function _getInput ( prompt, def, required, regex ) {
 	const { stdin, stdout } = process
 	stdin.setRawMode(true)
 
 	prompt = /[?:.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
-	const write = def ? `${prompt}(${def}) ` : `${prompt}`
-	stdout.write(write)
+	const toWrite = def ? `${prompt}(${def}) ` : prompt
+	stdout.write(toWrite)
 
+	let invalid = false
 	let answer = ""
+
+	if (regex) isValid()
 	return new Promise(( resolve ) => {
 		function line ( data ) {
 			const key = encodeURIComponent(data)
 
 			switch (key) {
-				case "%20": {
-					answer += " "
-					stdout.write(" ")
-
-					break
-				}
 				case "%08": {
 					if (answer.length) {
 						stdout.moveCursor(-1)
@@ -94,6 +91,8 @@ async function _getInput ( prompt, def ) {
 						stdout.moveCursor(-1)
 
 						answer = answer.slice(0, -1)
+
+						if (regex) isValid()
 					}
 
 					break
@@ -112,27 +111,35 @@ async function _getInput ( prompt, def ) {
 						stdout.moveCursor(-back)
 
 						answer = answer.slice(0, -back)
+
+						if (regex) isValid()
 					}
 
 					break
 				}
 				case "%0D": {
-					stdout.cursorTo(0)
-					stdout.write(Array(write.length + answer.length).fill(" ").join(""))
-					stdout.cursorTo(0)
+					if (!invalid && (!required || answer.length)) {
+						stdout.cursorTo(0)
+						stdout.write(Array(toWrite.length + answer.length).fill(" ").join(""))
+						stdout.cursorTo(0)
 
-					if (!answer.length) answer = def
-					stdout.write(`${prompt}\x1b[33m${answer || ""}\x1b[0m`)
+						if (!answer.length) answer = def || ""
+						stdout.write(`${prompt}\x1b[33m${answer || ""}\x1b[0m`)
 
-					stdout.write("\n")
-					stdin.removeListener("data", line)
+						stdout.write("\n")
+						stdin.removeListener("data", line)
 
-					return resolve(answer)
+						return resolve(answer)
+					}
+
+					break
 				}
 				default: {
-					if (/^[\w\d\-\\/_$@=^?!.:,;#+*|"'üöäßø]+$/i.test(data)) {
+					if (/^[\w\d\-\\/_$@=^?!.:,;#+*|"'üöäßø ]+$/i.test(data)) {
 						answer += data
 						stdout.write(data)
+
+						if (regex) isValid()
 					}
 
 					break
@@ -142,6 +149,38 @@ async function _getInput ( prompt, def ) {
 
 		stdin.on("data", line)
 	})
+
+	function isValid () {
+		let toVal = answer.length ? answer : def || ""
+
+		if (!regex.test(toVal) && !invalid) {
+			invalid = true
+
+			stdout.moveCursor(0, 1)
+			stdout.cursorTo(0)
+
+			stdout.write("\x1b[31m>> invalid input\x1b[0m")
+
+			stdout.moveCursor(0, -1)
+			stdout.cursorTo(0)
+
+			stdout.write(toWrite)
+			stdout.write(answer)
+		} else if (regex.test(toVal) && invalid) {
+			invalid = false
+
+			stdout.moveCursor(0, 1)
+			stdout.cursorTo(0)
+
+			stdout.write(" ".repeat(16))
+
+			stdout.moveCursor(0, -1)
+			stdout.cursorTo(0)
+
+			stdout.write(toWrite)
+			stdout.write(answer)
+		}
+	}
 }
 
 async function _getYesNo ( prompt, def, instant ) {
@@ -149,8 +188,8 @@ async function _getYesNo ( prompt, def, instant ) {
 	stdin.setRawMode(true)
 
 	prompt = /[?!:.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
-	const write = `${prompt}(${def ? "Y/n" : "y/N"}) `
-	stdout.write(write)
+	const toWrite = `${prompt}(${def ? "Y/n" : "y/N"}) `
+	stdout.write(toWrite)
 
 	let answer = ""
 	return new Promise(( resolve ) => {
@@ -160,7 +199,7 @@ async function _getYesNo ( prompt, def, instant ) {
 			if (/^[yn]$/i.test(key)) {
 				if (instant) {
 					stdout.cursorTo(0)
-					stdout.write(Array(write.length).fill(" ").join(""))
+					stdout.write(Array(toWrite.length).fill(" ").join(""))
 					stdout.cursorTo(0)
 
 					stdout.write(`${prompt}\x1b[33m${key.toLowerCase()}\x1b[0m`)
@@ -187,7 +226,7 @@ async function _getYesNo ( prompt, def, instant ) {
 				answer = ""
 			} else if (key == "%0D") {
 				stdout.cursorTo(0)
-				stdout.write(Array(write.length + 1).fill(" ").join(""))
+				stdout.write(Array(toWrite.length + 1).fill(" ").join(""))
 				stdout.cursorTo(0)
 
 				stdout.write(`${prompt}\x1b[33m${answer.length ? answer.toLowerCase() : def ? "y": "n" }\x1b[0m`)

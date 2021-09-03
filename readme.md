@@ -10,153 +10,119 @@ a small package to handle different types of command line input, especially usef
 - [about](#about)
 - [table of contents](#table-of-contents)
 - [use](#use)
-- [options](#options)
-	- [type](#type)
-	- [name](#name)
-	- [prompt](#prompt)
-	- [default](#default)
+	- [setup](#setup)
+	- [functions](#functions)
+- [questions](#questions)
+	- [input](#input)
+	- [y/n](#yn)
 	- [select](#select)
-	- [instant](#instant)
-	- [submit](#submit)
-	- [next](#next)
+	- [multiple](#multiple)
 
 # use
 
-<!-- to use it require the module and extend it as a class, add the property **options** as an array to it, and call the asynchrounous function **get** to get the user input. -->
-to use it import the module
+## setup
+
+to use this module you first have to import the module
 
 ```js
 import command from "@m4rch/command"
 ```
 
-create an array with objects of `options` or a single object of `options`
+create an array with objects of `questions` or a single object of `questions`
 
 ```js
-const options = [
-	// options go here
+const questions = [
+	// questions go here
 ]
 
 // or
 
-const options = {
-	// ...options
+const questions = {
+	// ...questions
 }
 ```
 
-and then call the imported function with the `options` (or add it via the `.get()` function), _optionally_ add an action via the `.action()` command on what to do, when the answers are in, and then call the asynchronous `.run()`, which returns the answers as well as call the action
+## functions
+
+to add an object of questions you can call the imported directly with the an `questions` object
 
 ```js
-const answers = await command(options)
+command(questions)
+```
+
+<!-- omit in toc -->
+### .get
+
+another way to add an object of questions is via the `.get(questions)`, meaning, that
+
+```js
+command()
+	.get(questions)
+```
+
+is identical to the previous function
+
+<!-- omit in toc -->
+### .action
+
+if you _want_ to add a function on what to do, after the answers have been collected, you can use the `.action(fn)` function, for example would
+
+```js
+command(questions)
 	.action(console.log)
+```
+
+simply console log after the answers have been collected
+
+<!-- omit in toc -->
+### .run
+
+after adding all the necessary objects you have to call the `.run(options)` function
+
+the function takes a single `options` object
+
+```ts
+interface options {
+	keepalive?: boolean // whether or not to keep the stdin stream alive after the answers have been collected
+}
+```
+
+and returns a promise, that will resolve, after all answers have been collected
+
+```js
+const answers = await command(questions)
 	.run()
 
-// or
+console.log(answers)
 
-const answers = await command()
-	.get(options)
+// does the same as
+
+command(questions)
 	.action(console.log)
 	.run()
 ```
 
-the get function returns an object.
+# questions
 
-# options
+```ts
+type questions = question | question[]
+```
 
-**every option is an object with fixed properties**
+**every question is an object with fixed properties**
 
-## type
+**there are four types of questions**
 
-\--- ***string*** ---  
-\--- ***mandatory*** ---
+every question _can_ have the special option `next`
 
-the type of an object determines the way the user inputs the data and the type of data returned
+**next:**
 
-*different input types require some different properties*
-
-- **"input"**
-
-the type "input" is a simple string input
-
-- **"y/n"**
-
-simple yes or no prompt
-
-- **"select"**
-
-for the type "select" input you can choose one of several inputs
-
-- **"multiple"**
-
-the "multiple" type is similar to the "select" type, but allows you to select multiple values
-
-## name
-
-\--- ***string*** ---  
-\--- ***mandatory*** ---
-
-the name of the returned value(s) in a key-value pair
-
-## prompt
-
-\--- ***string*** ---  
-\--- ***mandatory*** ---
-
-the question that gets prompted when the user has to input the answer
-
-## default
-
-\--- ***string, boolean, array*** ---  
-\--- ***optional*** ---  
-\--- ***for "input", "y/n", "multiple"*** ---
-
-the default option that gets selected when the user doesnt select anything
-
-if not defined the input will default to `undefined`, `false` or `[]` respectively
-
-\--- ***boolean*** ---  
-\--- ***optional*** ---  
-\--- ***for "y/n"*** ---
-
-the default value of either yes (`true`) or no (`false`)
-
-if not defined the default will be `false`
-
-## select
-
-\--- ***array*** ---  
-\--- ***mandatory*** ---  
-\--- ***for "multiple", "select"*** ---
-
-an array of values that the user can select from
-
-## instant
-
-\--- ***boolean*** ---  
-\--- ***optional*** ---  
-\--- ***for "y/n"*** ---
-
-whether or not the user has to type enter to submit or if it submits instantaneously
-
-## submit
-
-\--- ***string*** ---  
-\--- ***optional*** ---  
-\--- ***for "multiple"*** ---
-
-a string that determines the name of the "submit" button
-
-## next
-
-\--- ***array, object*** ---  
-\--- ***optional*** ---  
-
-the questions that get prompted after the current question was answered
+the questions that get prompted after the current question was answered 
 
 ***
 
 if next is an *object*, the values that get prompted are influenced by the decision on the current question
 
-if you choose, for example, "pizza", then the code will look for an object like the default `options` array / `options` object, as a value to the key "pizza". if one is found then these questions will be asked next.
+if you choose, for example, "pizza", then the code will look for an object like the default `questions` array / `questions` object, as a value to the key "pizza". if one is found then these questions will be asked next.
 
 if the type of the last option was "multiple" then for every chosen value will be checked if there is a corresponding array
 
@@ -165,3 +131,70 @@ if none are found then the code will simply skip to the next question in the arr
 ***
 
 if next is an *array*, then the code executes similar to if the items were simply put into the array
+
+```ts
+type Next = question[] | { [key: string]: questions }
+```
+
+**the four types of questions are**
+
+## input
+
+string input
+
+```ts
+interface question {
+	type: "input",       // type "input"
+	name: string,        // key of the returned value in the answers object
+	prompt: string,      // the question that is asked
+	default?: string,    // the answer if nothing is entered; default: undefined
+	validate?: RegExp    // a regex of the required format of the input; default: no validation
+	next: Next           // see #next
+}
+```
+
+## y/n
+
+simple yes or no prompt
+
+```ts
+interface question {
+	type: "y/n",         // type "y/n"
+	name: string,        // key of the returned value in the answers object
+	prompt: string,      // the question that is asked
+	default?: boolean,   // the answer if nothing is entered; default: false,
+	instant?: boolean,   // whether or not it submits instantaneously, when given an option; default: false
+	next: Next           // see #next
+}
+```
+
+## select
+
+select one of the given options
+
+```ts
+interface question {
+	type: "input",       // type "input"
+	name: string,        // key of the returned value in the answers object
+	prompt: string,      // the question that is asked
+	select: string[],    // the available options to select from
+	default?: string,    // the option that gets pre-highlighted on startup; default: this.select[0]
+	next: Next
+}
+```
+
+## multiple
+
+select any amount of the given options
+
+```ts
+interface question {
+	type: "input",       // type "input"
+	name: string,        // key of the returned value in the answers object
+	prompt: string,      // the question that is asked
+	select: string[],    // the available options to select from
+	default?: string[],  // array of answers where
+	submit?: string,     // the text on the submit button; default: "select"
+	next: Next
+}
+```

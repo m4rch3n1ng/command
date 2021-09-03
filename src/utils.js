@@ -16,6 +16,7 @@ export function validate ( options ) {
 		switch (option.type) {
 			case "input": {
 				if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"input\"")
+				if ("validate" in option && !(option.validate instanceof RegExp)) throw new Error("validate must be a regular expression if type is set to \"input\"")
 				break
 			}
 			case "y/n": {
