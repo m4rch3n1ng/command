@@ -174,7 +174,7 @@ select one of the given options
 
 ```ts
 interface question {
-	type: "input",       // type "input"
+	type: "select",      // type "select"
 	name: string,        // key of the returned value in the answers object
 	prompt: string,      // the question that is asked
 	select: string[],    // the available options to select from
@@ -189,7 +189,7 @@ select any amount of the given options
 
 ```ts
 interface question {
-	type: "input",       // type "input"
+	type: "multiple",    // type "multiple"
 	name: string,        // key of the returned value in the answers object
 	prompt: string,      // the question that is asked
 	select: string[],    // the available options to select from

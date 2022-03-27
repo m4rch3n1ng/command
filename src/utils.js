@@ -15,26 +15,24 @@ export function validate ( options ) {
 
 		switch (option.type) {
 			case "input": {
-				if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"input\"")
-				if ("validate" in option && !(option.validate instanceof RegExp)) throw new Error("validate must be a regular expression if type is set to \"input\"")
+				if (typeof option.default != "undefined" && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"input\"")
+				if (typeof option.validate != "undefined" && !(option.validate instanceof RegExp)) throw new Error("validate must be a regular expression if type is set to \"input\"")
 				break
 			}
 			case "y/n": {
-				if ("default" in option && typeof option.default != "boolean") throw new Error("default must be of type boolean if type is set to \"y/n\"")
-				if ("instant" in option && typeof option.instant != "boolean") throw new Error("instant must be of type boolean if type is set to \"y/n\"")
+				if (typeof option.default != "undefined" && typeof option.default != "boolean") throw new Error("default must be of type boolean if type is set to \"y/n\"")
+				if (typeof option.instant != "undefined" && typeof option.instant != "boolean") throw new Error("instant must be of type boolean if type is set to \"y/n\"")
 				break
 			}
 			case "select": {
-				if (!Array.isArray(option.select)) throw new Error("select must be of type array if type is set to select")
 				if (!option.select.length) throw new Error("select cannot be empty if type is set to select")
-				if ("default" in option && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"select\"")
+				if (typeof option.default != "undefined" && typeof option.default != "string") throw new Error("default must be of type string if type is set to \"select\"")
 				break
 			}
 			case "multiple": {
-				if (!Array.isArray(option.select)) throw new Error("select must be of type array if type is set to multiple")
 				if (!option.select.length) throw new Error("select cannot be empty if type is set to multiple")
-				if ("submit" in option && typeof option.submit != "string") throw new Error("submit must be of type string if type is set to \"submit\"")
-				if ("default" in option && !Array.isArray(option.default)) throw new Error("default must be of type array if type is set to \"multiple\"")
+				if (typeof option.submit != "undefined" && typeof option.submit != "string") throw new Error("submit must be of type string if type is set to \"submit\"")
+				if (typeof option.default != "undefined" && !Array.isArray(option.default)) throw new Error("default must be of type array if type is set to \"multiple\"")
 				break
 			}
 			default: {
@@ -42,7 +40,7 @@ export function validate ( options ) {
 			}
 		}
 
-		if ("next" in option) {
+		if (typeof option.next != "undefined") {
 			if (typeof option.next != "object") throw new Error("next must be of type object")
 
 			if (Array.isArray(option.next)) {

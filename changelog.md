@@ -7,6 +7,10 @@ and this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### added
+
+- `index.d.ts`
+
 ### changed
 
 - adjusted `todo.md` to use markdown syntax
