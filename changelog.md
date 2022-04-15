@@ -7,13 +7,28 @@ and this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.4.3]
+
+### changed
+
+- changed validator for `{ type: "input" }` to check for unicode instead of preselected characters
+- made it, so it doesn't automatically add a `:` after the prompt for `{ type: "input" }`
+
+## [0.4.2]
+
 ### added
 
 - `index.d.ts`
 
+## [0.4.1]
+
 ### changed
 
 - adjusted `todo.md` to use markdown syntax
+
+### fixed
+
+- fixed validator to check for `undefined`, instead of the key existing
 
 ## [0.4.0] - 2021-09-03
 

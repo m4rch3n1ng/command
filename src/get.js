@@ -71,7 +71,8 @@ async function _getInput ( prompt, def, required, regex ) {
 	const { stdin, stdout } = process
 	stdin.setRawMode(true)
 
-	prompt = /[?:.]$/.test(prompt) ? `${prompt} ` : `${prompt}: `
+	prompt = /[^ ]$/.test(prompt) ? `${prompt} ` : prompt
+
 	const toWrite = def ? `${prompt}(${def}) ` : prompt
 	stdout.write(toWrite)
 
@@ -135,7 +136,8 @@ async function _getInput ( prompt, def, required, regex ) {
 					break
 				}
 				default: {
-					if (/^[\w\d\-\\/_$@=^?!.:,;#+*|"'üöäßø ]+$/i.test(data)) {
+					if (/^[-\\/_$@=^?!.:,;#+*|"' \p{L}\d]+$/ui.test(data)) {
+					// if (/^[\w\d\-\\/_$@=^?!.:,;#+*|"'üöäßø ]+$/i.test(data)) {
 						answer += data
 						stdout.write(data)
 
