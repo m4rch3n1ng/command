@@ -136,7 +136,7 @@ async function _getInput ( prompt, def, required, regex ) {
 					break
 				}
 				default: {
-					if (/^[-\\/_$@=^?!.:,;#+*|&%"' \p{L}\d]+$/ui.test(data)) {
+					if (/^[-\\/_$@=^?!.:,;#+*|&%"'()[\]{} \p{L}\d]+$/ui.test(data)) {
 					// if (/^[\w\d\-\\/_$@=^?!.:,;#+*|"'üöäßø ]+$/i.test(data)) {
 						answer += data
 						stdout.write(data)

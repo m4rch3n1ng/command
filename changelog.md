@@ -7,6 +7,12 @@ and this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.4.5]
+
+### added
+
+- added `[ (, ), [, ], {, } ]` to valid characters for `{ type: "input" }`
+
 ## [0.4.4]
 
 ### added
