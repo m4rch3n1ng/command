@@ -236,7 +236,7 @@ async function _getYesNo ( prompt, def, instant ) {
 				stdout.write("\n")
 				stdin.removeListener("data", yn)
 
-				resolve(answer.length ? answer.toLowerCase() == "y" : def)
+				resolve(answer.length ? answer.toLowerCase() == "y" : def ?? false)
 			}
 		}
 

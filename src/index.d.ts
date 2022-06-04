@@ -1,4 +1,4 @@
-type Next = question[] | { [ key: string ]: question }
+type Next = question | question[] | { [ key: string ]: question | question[] }
 
 interface questionInput {
 	type: "input",
@@ -6,7 +6,7 @@ interface questionInput {
 	prompt: string,
 	default?: string,
 	validate?: RegExp
-	next: Next
+	next?: Next
 }
 
 interface questionYesNo {
@@ -15,7 +15,7 @@ interface questionYesNo {
 	prompt: string,
 	default?: boolean,
 	instant?: boolean,
-	next: Next
+	next?: Next
 }
 
 interface questionSelect {
@@ -24,7 +24,7 @@ interface questionSelect {
 	prompt: string,
 	select: string[],
 	default?: string,
-	next: Next
+	next?: Next
 }
 
 interface questionMultiple {
@@ -34,22 +34,21 @@ interface questionMultiple {
 	select: string[],
 	default?: string[],
 	submit?: string,
-	next: Next
+	next?: Next
 }
 
 export type question = questionInput | questionYesNo | questionSelect | questionMultiple
 
-
 interface anyObject {
-	[ key: string ]: any
+	[ key: string ]: boolean | string | string[]
 }
 
 interface Command {
-	get: ( questions: question ) => {}
-	action: ( fn: () => {}) => Command,
+	get: ( questions: question | question[] ) => {}
+	action: ( fn: ( answers: anyObject ) => unknown ) => Command,
 	run: ( settings?: { keepalive: boolean } ) => Promise<anyObject>
 }
 
-export function command ( questions: question ): Command
+export function command ( questions: question | question[] ): Command
 
 export default command
