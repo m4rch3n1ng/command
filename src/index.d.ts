@@ -39,14 +39,14 @@ interface questionMultiple {
 
 export type question = questionInput | questionYesNo | questionSelect | questionMultiple
 
-interface anyObject {
+export interface answers {
 	[ key: string ]: boolean | string | string[]
 }
 
 interface Command {
 	get: ( questions: question | question[] ) => {}
-	action: ( fn: ( answers: anyObject ) => unknown ) => Command,
-	run: ( settings?: { keepalive: boolean } ) => Promise<anyObject>
+	action: ( fn: ( answers: answers ) => unknown ) => Command,
+	run: ( settings?: { keepalive: boolean } ) => Promise<answers>
 }
 
 export function command ( questions: question | question[] ): Command

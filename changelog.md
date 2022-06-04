@@ -7,6 +7,19 @@ and this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.4.7]
+
+### fixed
+
+- rename anyObject to answers
+- export interface answers
+
+## [0.4.6]
+
+### fixed
+
+- fixed types
+
 ## [0.4.5]
 
 ### added
