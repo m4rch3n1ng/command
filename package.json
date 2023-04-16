@@ -1,6 +1,6 @@
 {
 	"name": "@m4rch/command",
-	"version": "0.4.7",
+	"version": "0.4.8",
 	"description": "a small command line tool to easily get user input",
 	"author": "m4rch",
 	"license": "Unlicense",

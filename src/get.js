@@ -85,6 +85,7 @@ async function _getInput ( prompt, def, required, regex ) {
 			const key = encodeURIComponent(data)
 
 			switch (key) {
+				case "%7F":
 				case "%08": {
 					if (answer.length) {
 						stdout.moveCursor(-1)

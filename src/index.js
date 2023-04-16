@@ -1,7 +1,7 @@
 import get from "./get.js"
 import { validate } from "./utils.js"
 
-export default function command ( object ) {
+export function command ( object ) {
 	let action = null
 	let json = object ? validate(object) : null
 
@@ -28,3 +28,5 @@ export default function command ( object ) {
 
 	return self
 }
+
+export default command
